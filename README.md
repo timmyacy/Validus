@@ -8,9 +8,9 @@
     - Add Class for FX Option and Result (DONE)
 * Pricing : Logic and Calculation of Greeks
     - Pricing Logic (https://www.sciencedirect.com/science/article/abs/pii/S0261560683800011) - (DONE)
-    - Calculate Greeks
-    - Implement notional scaling
-    - Add logic for put
+    - Calculate Greeks (DONE)
+    - Implement notional scaling (DONE)
+    - Add logic for put (DONE)
 * I/O - File Handling i.e Reading and Writing 
     - Add Reader for reading Excel files
     - Add Writer 
@@ -33,7 +33,7 @@ for the foreign interest rate as a dividend yield.
 
 ## Assumptions
 * Constant Volatility.
-* Notional Scaling applied to PV only(Greeks Todo).
+* Notional Scaling applied to PV and Greeks(DONE).
 * Foreign Rate treated as dividend yield.
 
 ## Setup(WIP):

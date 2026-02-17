@@ -4,49 +4,88 @@ from src.models.option import FXOption, OptionType
 import numpy as np
 from scipy.stats import norm
 
+from src.models.result import FXOptionResult
+
+
 class BlackScholesFX:
 
-    def __init__(self,option: FXOption):
-        self.option = option
-
-
-    def calculate_d1(self):
+    @staticmethod
+    def calculate_d1_d2(option: FXOption):
         # TODO: handle T=0 edge case
-        spot, strike = self.option.spot_price, self.option.strike
-        domestic_rate, foreign_rate = self.option.domestic_rate, self.option.foreign_rate
-        volatility,time_to_maturity = self.option.volatility, self.option.time_to_maturity
+        spot, strike = option.spot_price, option.strike
+        time_to_maturity, volatility = option.time_to_maturity, option.volatility
+        domestic_rate, foreign_rate = option.domestic_rate, option.foreign_rate
+        d1 =  (np.log(spot/ strike) + (domestic_rate - foreign_rate +
+            volatility**2/2) *time_to_maturity)/(volatility*np.sqrt(time_to_maturity))
+        d2 = d1 - volatility * np.sqrt(time_to_maturity)
+        return d1,d2
 
-        return (np.log(spot/strike) + (domestic_rate - foreign_rate+ volatility**2/2) *time_to_maturity)/(volatility*np.sqrt(time_to_maturity))
 
 
-    def calculate_d2(self,d1):
-        return d1 - self.option.volatility*np.sqrt(self.option.time_to_maturity)
+    @staticmethod
+    def get_notional(option:FXOption):
+        base_currency, quote_currency = option.underlying.split("/")
 
-    def get_notional(self):
-        base_currency, quote_currency = self.option.underlying.split("/")
-
-        if self.option.notional_currency == base_currency:
-            return self.option.notional
+        if option.notional_currency == base_currency:
+            return option.notional
         else:
-            return self.option.notional/self.option.strike
-    def price(self):
-        d1 = self.calculate_d1()
-        d2 = self.calculate_d2(d1)
+            return option.notional/option.strike
 
-        dr = np.exp(-self.option.domestic_rate*self.option.time_to_maturity)
-        fr = np.exp(-self.option.foreign_rate*self.option.time_to_maturity)
 
-        unit_pv = self.option.spot_price * fr * norm.cdf(d1) -self.option.strike * dr * norm.cdf(d2)
-        multiplier = self.get_notional()
+    @staticmethod
+    def price(option:FXOption):
+        d1,d2 = BlackScholesFX.calculate_d1_d2(option)
+
+        dr = np.exp(-option.domestic_rate*option.time_to_maturity)
+
+        fr = np.exp(-option.foreign_rate*option.time_to_maturity)
+
+        multiplier = BlackScholesFX.get_notional(option)
+
+        if option.option_type == OptionType.CALL:
+            unit_pv = option.spot_price * fr * norm.cdf(d1) - option.strike * dr * norm.cdf(d2)
+        else:
+            unit_pv = option.strike * dr * norm.cdf(-d2) - option.spot_price * fr * norm.cdf(-d1)
+
         return unit_pv * multiplier
 
+    @staticmethod
+    def calculate_delta(option:FXOption):
+        d1, _ = BlackScholesFX.calculate_d1_d2(option)
+        fr = np.exp(-option.foreign_rate*option.time_to_maturity)
+        multiplier = BlackScholesFX.get_notional(option)
 
-    def calculate_greeks(self):
-        pass
+        if option.option_type == OptionType.CALL:
+            delta = fr * norm.cdf(d1)
+
+        else:
+            delta = fr * (norm.cdf(d1) -1)
+        return delta * multiplier
+
+    @staticmethod
+    def calculate_vega(option:FXOption):
+        d1, _ = BlackScholesFX.calculate_d1_d2(option)
+        fr = np.exp(-option.foreign_rate*option.time_to_maturity)
+        multiplier = BlackScholesFX.get_notional(option)
+        vega = fr * option.spot_price * np.sqrt(option.time_to_maturity) * norm.pdf(d1) * 0.01
+
+        return vega * multiplier
+
+    @staticmethod
+    def calculate_greeks_and_pv(option:FXOption):
+
+        return FXOptionResult(
+            id=option.id,
+            pv=float(BlackScholesFX.price(option)),
+            delta=float(BlackScholesFX.calculate_delta(option)),  # Total Delta
+            vega=float(BlackScholesFX.calculate_vega(option))  # Total Vega
+        )
 
 
 if __name__ == "__main__":
     test = FXOption(id="id001", option_type= OptionType.CALL,strike=1.12,spot_price=1.1,volatility=0.11,time_to_maturity=0.25,domestic_rate=0.01,foreign_rate=0.02,underlying='EUR/USD',notional=1000000,notional_currency="USD")
 
-    val = BlackScholesFX(test)
-    print(f"Option Price: {val.price():.4f}")
+
+    print(f"Option Price: {BlackScholesFX.price(test):.4f}\n")
+    print(f"Greeks: {BlackScholesFX.calculate_greeks_and_pv(test)}")
+
