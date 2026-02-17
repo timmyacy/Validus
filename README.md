@@ -7,7 +7,8 @@
 * Models: Greeks and data validation
     - Add Class for FX Option and Result (DONE)
 * Pricing : Logic and Calculation of Greeks
-    - Pricing Logic 
+    - Pricing Logic (https://www.sciencedirect.com/science/article/abs/pii/S0261560683800011) - (DONE)
+    - Calculate Greeks
 * I/O - File Handling i.e Reading and Writing 
     - Add REader for reading Excel files
     - Add Writer 
@@ -23,6 +24,7 @@ graph LR
     D --> E[Aggregate Totals]
     E --> F[Export Results]
 ```
+
 ## Assumptions
 * Standard Black-Scholes assumptions i.e constant Volatility, No dividends etc.
 
