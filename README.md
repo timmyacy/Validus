@@ -9,10 +9,13 @@
 * Pricing : Logic and Calculation of Greeks
     - Pricing Logic (https://www.sciencedirect.com/science/article/abs/pii/S0261560683800011) - (DONE)
     - Calculate Greeks
+    - Implement notional scaling
+    - Add logic for put
 * I/O - File Handling i.e Reading and Writing 
-    - Add REader for reading Excel files
+    - Add Reader for reading Excel files
     - Add Writer 
 * Orchestration - Full pipeline herein
+    - Logging
 
 ## Flow
 
@@ -24,9 +27,14 @@ graph LR
     D --> E[Aggregate Totals]
     E --> F[Export Results]
 ```
+## Pricing Model
+This model implements the Garman-Kohlhagen process which builds on the standard Black-Scholes implmentation catering 
+for the foreign interest rate as a dividend yield.
 
 ## Assumptions
-* Standard Black-Scholes assumptions i.e constant Volatility, No dividends etc.
+* Constant Volatility.
+* Notional Scaling applied to PV only(Greeks Todo).
+* Foreign Rate treated as dividend yield.
 
 ## Setup(WIP):
 Dependencies - Can include requirements.txt
