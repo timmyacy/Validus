@@ -1,9 +1,7 @@
 # TODO: Reading Class
 # Pass in excel data
 import argparse
-
 import pandas as pd
-import sys
 from src.models.option import FXOption
 from src.models.result import PortfolioSummary
 from src.pricing.black_scholes import BlackScholesFX

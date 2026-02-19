@@ -36,5 +36,8 @@ for the foreign interest rate as a dividend yield.
 * Notional Scaling applied to PV and Greeks(DONE).
 * Foreign Rate treated as dividend yield.
 
+
+## Testing 
+Test the prcing model, classes and the read writer 
 ## Setup(WIP):
 Dependencies - Can include requirements.txt
