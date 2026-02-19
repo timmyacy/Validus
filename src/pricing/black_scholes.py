@@ -11,7 +11,6 @@ class BlackScholesFX:
 
     @staticmethod
     def calculate_d1_d2(option: FXOption):
-        # TODO: handle T=0 edge case
         spot, strike = option.spot_price, option.strike
         time_to_maturity, volatility = option.time_to_maturity, option.volatility
         domestic_rate, foreign_rate = option.domestic_rate, option.foreign_rate
@@ -29,7 +28,7 @@ class BlackScholesFX:
         if option.notional_currency == base_currency:
             return option.notional
         else:
-            return option.notional/option.strike
+            return option.notional/option.spot_price
 
 
     @staticmethod
@@ -73,13 +72,22 @@ class BlackScholesFX:
 
     @staticmethod
     def calculate_greeks_and_pv(option:FXOption):
-
-        return FXOptionResult(
-            id=option.id,
-            pv=float(BlackScholesFX.price(option)),
-            delta=float(BlackScholesFX.calculate_delta(option)),  # Total Delta
-            vega=float(BlackScholesFX.calculate_vega(option))  # Total Vega
-        )
+        if option.time_to_maturity <= 0:
+            if option.option_type == OptionType.CALL:
+                value = max(option.spot_price - option.strike, 0)
+                delta = 1 if option.spot_price > option.strike else 0
+            else:
+                value = max(option.strike - option.spot_price, 0)
+                delta = -1 if option.strike > option.spot_price else 0
+            multiplier = BlackScholesFX.get_notional(option)
+            return FXOptionResult(id=option.id,pv=float(value * multiplier),delta=float(delta * multiplier),vega=0)
+        else:
+            return FXOptionResult(
+                id=option.id,
+                pv=float(BlackScholesFX.price(option)),
+                delta=float(BlackScholesFX.calculate_delta(option)),
+                vega=float(BlackScholesFX.calculate_vega(option))
+            )
 
 
 if __name__ == "__main__":

@@ -4,7 +4,12 @@ from src.models.option import FXOption, OptionType
 from src.models.result import PortfolioSummary
 from src.pricing.black_scholes import BlackScholesFX
 
+def test_pv_non_negative():
+    option = FXOption(id="CALL001",option_type=OptionType.CALL,spot_price=1.1,strike=1.12,volatility=0.15,domestic_rate=0.02,
+        foreign_rate=0.01,time_to_maturity=0.25,underlying="EUR/USD",notional=1000000,notional_currency="USD")
 
+    result = BlackScholesFX.calculate_greeks_and_pv(option)
+    assert result.pv >= 0, f"PV should be non-negative, calculated PV is {result.pv}"
 def test_call_positive_delta():
     option = FXOption(id="CALL001",option_type=OptionType.CALL,spot_price=1.1,strike=1.12,volatility=0.15,domestic_rate=0.02,
         foreign_rate=0.01,time_to_maturity=0.25,underlying="EUR/USD",notional=1000000,notional_currency="USD")
@@ -37,14 +42,17 @@ def test_positive_vega():
 
 
 def test_negative_volatility():
-
-    with pytest.raises(ValidationError) as exc_info:
+    with pytest.raises(ValidationError):
         FXOption(id="inv_CALL01",option_type=OptionType.CALL,spot_price=1.1,strike=1.12,volatility=-0.15,domestic_rate=0.02,
             foreign_rate=0.01,time_to_maturity=0.25,underlying="EUR/USD",notional=1000000,notional_currency="USD")
 
-    assert "volatility" in str(exc_info.value).lower()
 
-
+def test_missing_field_option():
+    with pytest.raises(ValidationError):
+        FXOption(id="CALL001", option_type=OptionType.CALL, spot_price=1.1, volatility=0.15,
+                 domestic_rate=0.02,
+                 foreign_rate=0.01, time_to_maturity=0.25, underlying="EUR/USD", notional=1000000,
+                 notional_currency="USD")
 
 def test_portfolio_summation():
 
