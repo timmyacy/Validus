@@ -5,12 +5,15 @@ from src.models.result import PortfolioSummary
 from src.pricing.black_scholes import BlackScholesFX
 
 def test_pv_non_negative():
+    """Ensures that option prices remain non-negative."""
     option = FXOption(id="CALL001",option_type=OptionType.CALL,spot_price=1.1,strike=1.12,volatility=0.15,domestic_rate=0.02,
         foreign_rate=0.01,time_to_maturity=0.25,underlying="EUR/USD",notional=1000000,notional_currency="USD")
 
     result = BlackScholesFX.calculate_greeks_and_pv(option)
     assert result.pv >= 0, f"PV should be non-negative, calculated PV is {result.pv}"
+
 def test_call_positive_delta():
+    """Call delta should be positive"""
     option = FXOption(id="CALL001",option_type=OptionType.CALL,spot_price=1.1,strike=1.12,volatility=0.15,domestic_rate=0.02,
         foreign_rate=0.01,time_to_maturity=0.25,underlying="EUR/USD",notional=1000000,notional_currency="USD")
 
@@ -19,6 +22,7 @@ def test_call_positive_delta():
 
 
 def test_put_negative_delta():
+    """Put delta should be negative"""
     option = FXOption(id="PUT001",option_type=OptionType.PUT,spot_price=1.1,strike=1.15,volatility=0.12,domestic_rate=0.02,
         foreign_rate=0.01,time_to_maturity=0.5,underlying="EUR/USD",notional=500000,notional_currency="USD")
 
@@ -28,6 +32,7 @@ def test_put_negative_delta():
 
 
 def test_positive_vega():
+    """Vega should be positive for calls and puts"""
     call = FXOption(id="CALL001",option_type=OptionType.CALL,spot_price=1.1,strike=1.12,volatility=0.15,domestic_rate=0.02,
         foreign_rate=0.01,time_to_maturity=0.25,underlying="EUR/USD",notional=1000000,notional_currency="USD")
 
@@ -42,12 +47,14 @@ def test_positive_vega():
 
 
 def test_negative_volatility():
+    """Negative volatility should raise ValidationError"""
     with pytest.raises(ValidationError):
         FXOption(id="inv_CALL01",option_type=OptionType.CALL,spot_price=1.1,strike=1.12,volatility=-0.15,domestic_rate=0.02,
             foreign_rate=0.01,time_to_maturity=0.25,underlying="EUR/USD",notional=1000000,notional_currency="USD")
 
 
 def test_missing_field_option():
+    """Missing required field should raise ValidationError"""
     with pytest.raises(ValidationError):
         FXOption(id="CALL001", option_type=OptionType.CALL, spot_price=1.1, volatility=0.15,
                  domestic_rate=0.02,
@@ -55,7 +62,7 @@ def test_missing_field_option():
                  notional_currency="USD")
 
 def test_portfolio_summation():
-
+    """Portfolio totals should equal sum of individual trades"""
     call = FXOption(id="CALL001",option_type=OptionType.CALL,spot_price=1.1,strike=1.12,volatility=0.15,domestic_rate=0.02,
         foreign_rate=0.01,time_to_maturity=0.25,underlying="EUR/USD",notional=1000000,notional_currency="USD")
 

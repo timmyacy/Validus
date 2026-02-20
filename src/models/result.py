@@ -8,7 +8,7 @@ class FXOptionResult(BaseModel):
     vega: float = Field (description="Sensitivity to the volatility of the underlying asset")
 
 class PortfolioSummary(BaseModel):
-    total_pv: float
-    total_delta: float
-    total_vega: float
+    total_pv: float = Field(description="Total Present value of the option")
+    total_delta: float = Field(description="Total Sensitivity to the underlying asset price")
+    total_vega: float = Field (description="Total Sensitivity to the volatility of the underlying asset")
     num_of_trades: int
