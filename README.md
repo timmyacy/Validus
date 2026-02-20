@@ -137,7 +137,7 @@ $$d_2 = d_1 - \sigma\sqrt{T}$$
 
 > Note: $N(\cdot)$ is the cumulative normal distribution, $N'(\cdot)$ is the standard normal probability density function, and Vega is scaled for a 1% absolute change in volatility.
 
-## Assumptions
+## Assumptions & Limitations
 
 **Input Data:**
 - Excel file uses these column names: `TradeID`, `Underlying`, `Notional`, `NotionalCurrency`, `Spot`, `Strike`, `Vol`, `RateDomestic`, `RateForeign`, `Expiry`, `OptionType`
@@ -151,6 +151,7 @@ $$d_2 = d_1 - \sigma\sqrt{T}$$
 - Uses Garman-Kohlhagen extension of Black-Scholes for FX options
 - Foreign rate treated as continuous dividend yield
 - Constant volatility
+- No transaction costs
 
 **Greeks:**
 - Delta and Vega are scaled by notional for portfolio aggregation

@@ -1,3 +1,5 @@
+import math
+
 import pytest
 from pydantic import ValidationError
 from src.models.option import FXOption, OptionType
@@ -113,3 +115,39 @@ def test_put_call_parity():
     rhs = put_price + call.spot_price * np.exp(-call.foreign_rate * call.time_to_maturity)
 
     assert np.isclose(lhs,rhs), f"Parity failed: LHS {lhs} != RHS {rhs}"
+
+
+def test_notional_conversion():
+    """Test the notional conversion"""
+
+    # Notional is in USD (Quote), Spot is 1.1 , 1,100,000 USD / 1.1 = 1,000,000 EUR
+    call_usd = FXOption(
+        id="T01_USD", underlying="EUR/USD", notional=1100000, notional_currency="USD",
+        spot_price=1.1, strike=1.12, volatility=0.11, domestic_rate=0.02,
+        foreign_rate=0.01, time_to_maturity=0.25, option_type=OptionType.CALL
+    )
+
+    # Notional is already in EUR
+    call_eur = call_usd.model_copy(update={"notional": 1000000, "notional_currency": "EUR"})
+
+    mult_quote = BlackScholesFX.get_notional(call_usd)
+    mult_base = BlackScholesFX.get_notional(call_eur)
+
+    assert math.isclose(mult_quote, 1000000.0), f"USD conversion failed: got {mult_quote}"
+    assert math.isclose(mult_base, 1000000.0), f"Base currency should not be divided: got {mult_base}"
+
+
+def test_at_maturity_intrinsic_value():
+    """Ensures options at maturity return intrinsic value"""
+
+    call_itm = FXOption(
+        id="MATURITY_TEST", underlying="EUR/USD", spot_price=1.2, strike=1.1,
+        volatility=0.1, domestic_rate=0.01, foreign_rate=0.01, time_to_maturity=0,
+        notional=1, notional_currency="EUR", option_type=OptionType.CALL
+    )
+
+    result = BlackScholesFX.calculate_greeks_and_pv(call_itm)
+
+    assert math.isclose(result.pv, 0.1), f"PV should be 0.1, got {result.pv}"
+    assert math.isclose(result.delta, 1.0), f"Delta should be 1.0, got {result.delta}"
+    assert math.isclose(result.vega, 0.0), f"Vega should be 0.0, got {result.vega}"
