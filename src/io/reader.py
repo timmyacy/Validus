@@ -42,9 +42,9 @@ class FileReader:
                 valid_trades.append(FXOption(**record))
 
             except ValidationError as e:
-
                 # If validation fails, extract the exact error message and skip the trade
                 error_msg = e.errors()
                 logger.warning(f"Skipping invalid trade {record.get('id')}: {error_msg}")
-
+        if not valid_trades:
+            logger.warning("No valid trades found all  records failed validation.")
         return valid_trades

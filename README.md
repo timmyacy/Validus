@@ -72,7 +72,7 @@ python3 -m pytest tests/ -v
 ## Features
 
 * **Data Loading**: Loads .xlsx files and maps columns directly to the FXOption model.
-* **Validation**: Uses Pydantic model to enforce data types and positive value constraints.
+* **Validation**: Uses Pydantic model to enforce data types and positive value constraints and now skips invalid trades and shows it in logs.
 * **Pricing Model**: Implements the Black-Scholes formula using the Garman-Kohlhagen adjustment for FX.
 * **Greek Calculations**: Calculates Delta and Vega scaled by notional and adjusted for currency.
 * **Edge Cases**: Handles expired trades or trades at maturity by returning intrinsic value and zero vega.
