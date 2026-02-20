@@ -1,9 +1,11 @@
 from enum import Enum
 from pydantic import BaseModel, Field
 
-class OptionType(str,Enum):
+
+class OptionType(str, Enum):
     CALL = "Call"
     PUT = "Put"
+
 
 class FXOption(BaseModel):
 
