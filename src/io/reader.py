@@ -1,6 +1,8 @@
 import pandas as pd
 from src.models import FXOption
-
+import logging
+from pydantic import ValidationError
+logger = logging.getLogger(__name__)
 class FileReader:
     @staticmethod
     def load_data(input_path: str):
@@ -30,6 +32,19 @@ class FileReader:
         }
 
         # Convert rows to dictionaries and FXOption instances
-
         df = df.rename(columns=column_mapping)
-        return [FXOption(**record) for record in df.to_dict('records')]
+        valid_trades = []
+
+        # Iterate through each row and validate individually
+        for record in df.to_dict('records'):
+            try:
+                # Instantiate the Pydantic model
+                valid_trades.append(FXOption(**record))
+
+            except ValidationError as e:
+
+                # If validation fails, extract the exact error message and skip the trade
+                error_msg = e.errors()
+                logger.warning(f"Skipping invalid trade {record.get('id')}: {error_msg}")
+
+        return valid_trades
