@@ -3,6 +3,9 @@ import numpy as np
 import scipy.stats as stats
 from src.models import FXOption, OptionType
 from src.models import FXOptionResult
+import logging
+
+logger = logging.getLogger(__name__)
 
 class BlackScholesFX:
 
@@ -23,7 +26,6 @@ class BlackScholesFX:
         d1 =  (np.log(spot/ strike) + (domestic_rate - foreign_rate +
             volatility**2/2) *time_to_maturity)/(volatility*np.sqrt(time_to_maturity))
         d2 = d1 - volatility * np.sqrt(time_to_maturity)
-
         return d1,d2
 
     @staticmethod
@@ -37,7 +39,6 @@ class BlackScholesFX:
 
         # Split the underlying currency into base and quote currency
         base_currency, quote_currency = option.underlying.split("/")
-
         if option.notional_currency == base_currency:
             return option.notional
         # If notional is in quote currency, it is converted to base currency using the current spot price.
@@ -46,22 +47,22 @@ class BlackScholesFX:
 
 
     @staticmethod
-    def price(option:FXOption):
+    def price(option:FXOption,d1:float, d2:float,multiplier: float):
 
         """
         Calculate the present value of the option
 
         :param option: The FXOption object containing market data.
+        :param d1: The first factor of the BS FXOption eqn.
+        :param d2: The second factor of the BS FXOption eqn.
+        :param multiplier: The notional multiplier
         :return: Total present value of the option scaled by notional
         """
 
-        d1,d2 = BlackScholesFX.calculate_d1_d2(option)
 
         # Calculate the discount factors
         dr = np.exp(-option.domestic_rate*option.time_to_maturity)
         fr = np.exp(-option.foreign_rate*option.time_to_maturity)
-
-        multiplier = BlackScholesFX.get_notional(option)
 
         # Calculate the unit price accordingly for option type then scale by notional
         if option.option_type == OptionType.CALL:
@@ -72,21 +73,18 @@ class BlackScholesFX:
         return unit_pv * multiplier
 
     @staticmethod
-    def calculate_delta(option:FXOption):
+    def calculate_delta(option:FXOption,d1:float, multiplier: float):
         """
         Calculate the delta of the option
 
         :param option: The FXOption object containing market data.
+        :param d1: The first factor of the BS FXOption eqn.
+        :param multiplier: The notional multiplier
         :return: The delta of the FXOption scaled by notional, showing how much is needed to hedge the option
         """
 
-
-        d1, _ = BlackScholesFX.calculate_d1_d2(option)
         #  Discount by the foreign interest rate
         fr = np.exp(-option.foreign_rate*option.time_to_maturity)
-
-        # Convert the notional to base currency
-        multiplier = BlackScholesFX.get_notional(option)
 
         if option.option_type == OptionType.CALL:
             # Call Delta - e^(-foreign_rate * T) * N(d1)
@@ -98,20 +96,17 @@ class BlackScholesFX:
         return delta * multiplier
 
     @staticmethod
-    def calculate_vega(option:FXOption):
+    def calculate_vega(option:FXOption,d1:float, multiplier: float):
         """
         This calculates the sensitivity to the volatility of the underlying asset i.e. The vega of the FX option. .
 
         :param option: The FXOption object containing market data.
+        :param d1: The first factor of the BS FXOption eqn.
+        :param multiplier: The notional multiplier
         :return: Total Vega scaled by notional and reported per 1% change in vol.
         """
 
-        # Calculate d1 for the probability density function input
-        d1, _ = BlackScholesFX.calculate_d1_d2(option)
-
-
         fr = np.exp(-option.foreign_rate*option.time_to_maturity)
-        multiplier = BlackScholesFX.get_notional(option)
 
         # The factor of 0.01 is to convert the vega to percentage change in volatility
         vega = fr * option.spot_price * np.sqrt(option.time_to_maturity) * stats.norm.pdf(d1) * 0.01
@@ -139,12 +134,20 @@ class BlackScholesFX:
             # Vega is always zero at maturity
             return FXOptionResult(id=option.id,pv=float(value * multiplier),delta=float(delta * multiplier),vega=0)
         else:
+            d1, d2 = BlackScholesFX.calculate_d1_d2(option)
+            multiplier = BlackScholesFX.get_notional(option)
+
+            # Add debug level to show conversion of for each level
+            logger.debug(
+                f"Trade {option.id}: Notional converted from {option.notional_currency} to {option.underlying.split('/')[0]} using spot {option.spot_price}"
+            )
+            logger.debug(f"Trade {option.id}: d1 = {d1}, d2 = {d2}")
             # Calculate all greeks and pv for options as normal
             return FXOptionResult(
                 id=option.id,
-                pv=float(BlackScholesFX.price(option)),
-                delta=float(BlackScholesFX.calculate_delta(option)),
-                vega=float(BlackScholesFX.calculate_vega(option))
+                pv=float(BlackScholesFX.price(option,d1,d2,multiplier)),
+                delta=float(BlackScholesFX.calculate_delta(option,d1,multiplier)),
+                vega=float(BlackScholesFX.calculate_vega(option,d1,multiplier))
             )
 
 

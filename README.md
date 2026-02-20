@@ -38,6 +38,11 @@ Run the program from the command line, providing the input and output file paths
 python3 -m src.main fx_trades__1_.xlsx output.xlsx
 ```
 
+For a more detailed output
+```bash
+python3 -m src.main fx_trades__1_.xlsx output.xlsx --verbose
+```
+
 ## Testing
 
 Run tests:
@@ -138,7 +143,9 @@ $$d_2 = d_1 - \sigma\sqrt{T}$$
 - Excel file uses these column names: `TradeID`, `Underlying`, `Notional`, `NotionalCurrency`, `Spot`, `Strike`, `Vol`, `RateDomestic`, `RateForeign`, `Expiry`, `OptionType`
 - Interest rates and volatility are decimals (e.g., 0.05 for 5%).
 - Expiry is in years (e.g., 0.25 for 3 months).
-- Options are European-style. 
+- Options are European-style.
+- Negative rates can exist hence no constraints.
+- The currency pair will be delimited by a slash i.e ABC/DEF
 
 **Pricing Model:**
 - Uses Garman-Kohlhagen extension of Black-Scholes for FX options
