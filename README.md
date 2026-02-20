@@ -9,7 +9,7 @@ results and portfolio summaries to a new Excel file.
 
 1. **Clone the repository**:
 ```bash
-git clone [https://github.com/timmyacy/Validus.git](https://github.com/timmyacy/Validus.git)
+git clone https://github.com/timmyacy/Validus.git
 cd Validus
 ```
 
@@ -65,6 +65,9 @@ python3 -m pytest tests/ -v
 - Delta signs, vega positivity, PV non-negativity.
 - Pydantic validation i.e negative values, missing fields.
 - Portfolio aggregation logic.
+- Put call parity.
+- Notional conversion between currencies.
+- Intrinsic Value at maturity.
 
 ## Features
 
